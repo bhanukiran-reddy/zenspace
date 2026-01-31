@@ -1,0 +1,9 @@
+﻿=== Testing Image Generation with generateImages API ===
+
+Testing: gemini-2.5-flash-image
+  Γ¥î Error (404): {"error":{"code":404,"message":"models/gemini-2.5-flash-image is not found for A
+
+Testing: gemini-2.0-flash-exp-image-generation
+  Γ¥î Error (404): {"error":{"code":404,"message":"models/gemini-2.0-flash-exp-image-generation is 
+
+Γ¥î No models worked - quota may be exhausted for all.

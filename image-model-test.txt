@@ -1,0 +1,15 @@
+﻿=== Finding working image generation model ===
+
+Testing: gemini-2.5-flash-preview-image-generation
+  Γ¥î Error (404): {"error":{"code":404,"message":"models/gemini-2.5-flash-prev
+
+Testing: gemini-2.0-flash-exp-image-generation
+  Γ¥î Error (429): {"error":{"code":429,"message":"You exceeded your current qu
+
+Testing: imagen-4.0-generate-001
+  Γ¥î Error (404): {"error":{"code":404,"message":"models/imagen-4.0-generate-0
+
+Testing: imagen-4.0-fast-generate-001
+  Γ¥î Error (404): {"error":{"code":404,"message":"models/imagen-4.0-fast-gener
+
+Γ¥î No working image models found. Quota may be exhausted.
