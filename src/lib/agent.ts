@@ -53,9 +53,9 @@ export class ZenSpaceAgent {
 
     async analyzeSpace(imageParts: any[], userPrompt: string) {
         try {
-            // The @google/genai SDK (v1.38.0) uses client.models.generateContent
             const response = await this.client.models.generateContent({
-                model: "gemini-2.0-flash-exp",
+                // Using gemini-2.5-flash - the current stable multimodal model
+                model: "gemini-2.5-flash",
                 contents: [
                     {
                         role: "user",
@@ -65,17 +65,20 @@ export class ZenSpaceAgent {
                         ]
                     }
                 ],
+                // @google/genai v1.38.0 typically wraps these in 'config'
                 config: {
                     systemInstruction: SYSTEM_INSTRUCTION,
                     responseMimeType: "application/json",
                 }
             });
 
-            // Based on SDK structure, response has candidates
+            // Safe extraction of the text content
             const text = response.candidates?.[0]?.content?.parts?.[0]?.text;
+
             if (!text) {
                 throw new Error("No response text received from Gemini");
             }
+
             return text;
         } catch (error) {
             console.error("ZenSpace Agent Error:", error);

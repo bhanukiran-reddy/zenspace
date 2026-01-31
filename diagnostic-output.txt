@@ -1,0 +1,80 @@
+﻿=== GEMINI API DIAGNOSTIC REPORT ===
+
+PHASE 1: API KEY ANALYSIS
+------------------------
+Γ£ô API Key exists: AIzaSyCISt...MLRs4
+  Key length: 39 characters
+  Key prefix: Γ£ô Valid AIza prefix
+
+PHASE 2: CLIENT INITIALIZATION
+-------------------------------
+Γ£ô GoogleGenAI client created successfully
+
+PHASE 3: LIST AVAILABLE MODELS
+-------------------------------
+Γ£ô Found 47 models:
+  - models/gemini-2.5-flash
+  - models/gemini-2.5-pro
+  - models/gemini-2.0-flash
+  - models/gemini-2.0-flash-001
+  - models/gemini-2.0-flash-exp-image-generation
+  - models/gemini-2.0-flash-lite-001
+  - models/gemini-2.0-flash-lite
+  - models/gemini-exp-1206
+  - models/gemini-2.5-flash-preview-tts
+  - models/gemini-2.5-pro-preview-tts
+  - models/gemma-3-1b-it
+  - models/gemma-3-4b-it
+  - models/gemma-3-12b-it
+  - models/gemma-3-27b-it
+  - models/gemma-3n-e4b-it
+  - models/gemma-3n-e2b-it
+  - models/gemini-flash-latest
+  - models/gemini-flash-lite-latest
+  - models/gemini-pro-latest
+  - models/gemini-2.5-flash-lite
+  - models/gemini-2.5-flash-image
+  - models/gemini-2.5-flash-preview-09-2025
+  - models/gemini-2.5-flash-lite-preview-09-2025
+  - models/gemini-3-pro-preview
+  - models/gemini-3-flash-preview
+  - models/gemini-3-pro-image-preview
+  - models/nano-banana-pro-preview
+  - models/gemini-robotics-er-1.5-preview
+  - models/gemini-2.5-computer-use-preview-10-2025
+  - models/deep-research-pro-preview-12-2025
+  - models/embedding-001
+  - models/text-embedding-004
+  - models/gemini-embedding-001
+  - models/aqa
+  - models/imagen-4.0-generate-preview-06-06
+  - models/imagen-4.0-ultra-generate-preview-06-06
+  - models/imagen-4.0-generate-001
+  - models/imagen-4.0-ultra-generate-001
+  - models/imagen-4.0-fast-generate-001
+  - models/veo-2.0-generate-001
+  - models/veo-3.0-generate-001
+  - models/veo-3.0-fast-generate-001
+  - models/veo-3.1-generate-preview
+  - models/veo-3.1-fast-generate-preview
+  - models/gemini-2.5-flash-native-audio-latest
+  - models/gemini-2.5-flash-native-audio-preview-09-2025
+  - models/gemini-2.5-flash-native-audio-preview-12-2025
+
+PHASE 4: MODEL ACCESS TESTS
+----------------------------
+Γ£ô gemini-2.5-flash: SUCCESS (OK...)
+Γ¥î gemini-2.0-flash: FAILED (429) - {"error":{"code":429,"message":"You exceeded your current quota, please check yo
+Γ¥î gemini-2.0-flash-001: FAILED (429) - {"error":{"code":429,"message":"You exceeded your current quota, please check yo
+Γ¥î gemini-2.0-flash-exp: FAILED (404) - {"error":{"code":404,"message":"models/gemini-2.0-flash-exp is not found for API
+Γ¥î gemini-1.5-flash: FAILED (404) - {"error":{"code":404,"message":"models/gemini-1.5-flash is not found for API ver
+Γ¥î gemini-1.5-flash-002: FAILED (404) - {"error":{"code":404,"message":"models/gemini-1.5-flash-002 is not found for API
+Γ¥î gemini-1.5-pro: FAILED (404) - {"error":{"code":404,"message":"models/gemini-1.5-pro is not found for API versi
+Γ¥î gemini-pro: FAILED (404) - {"error":{"code":404,"message":"models/gemini-pro is not found for API version v
+Γ¥î models/gemini-2.0-flash: FAILED (429) - {"error":{"code":429,"message":"You exceeded your current quota, please check yo
+Γ¥î models/gemini-1.5-flash: FAILED (404) - {"error":{"code":404,"message":"models/gemini-1.5-flash is not found for API ver
+
+=== DIAGNOSIS ===
+If ALL models fail with 404: API key may be invalid, disabled, or project not properly set up
+If SOME models fail: Those specific model versions may be deprecated or not available for your project
+Check: https://aistudio.google.com/ to verify your API key and project settings
