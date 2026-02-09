@@ -6,11 +6,14 @@ const client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 // List of models to try in order of preference
 const MODELS_TO_TRY = [
+    "gemini-2.5-flash", // Newest, might have different quota?
     "gemini-2.0-flash",
     "gemini-2.0-flash-lite",
+    "gemini-1.5-flash", // Standard fallback
     "gemini-flash-latest",
-    "gemini-pro-latest",
 ];
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export async function POST(req: NextRequest) {
     try {
@@ -50,7 +53,34 @@ export async function POST(req: NextRequest) {
                     ],
                 });
 
-                const text = response.response.text();
+                // Safe access to text
+                let text = "";
+                // Try helper method first (if available)
+                if (response.response && typeof response.response.text === 'function') {
+                    try {
+                        text = response.response.text();
+                    } catch (e) {
+                        // Fall out to manual parsing
+                    }
+                }
+
+                // Manual parsing fallback
+                if (!text) {
+                    // Check if response has candidates directly (SDK v1beta behavior?)
+                    if ((response as any).candidates && (response as any).candidates[0]?.content?.parts?.[0]?.text) {
+                        text = (response as any).candidates[0].content.parts[0].text;
+                    }
+                    // Check if response.response has candidates
+                    else if (response.response?.candidates?.[0]?.content?.parts?.[0]?.text) {
+                        text = response.response.candidates[0].content.parts[0].text;
+                    }
+                }
+
+                if (!text) {
+                    console.error("Unexpected response structure for model " + model, JSON.stringify(response, null, 2));
+                    throw new Error("Unexpected response structure");
+                }
+
                 return NextResponse.json({
                     response: text,
                     usedModel: model
@@ -58,9 +88,10 @@ export async function POST(req: NextRequest) {
 
             } catch (error: any) {
                 console.warn(`Failed with model ${model}:`, error.message);
-                // If it's a 429 (Resource Exhausted) or 503 (Unavailable), continue to next model.
-                // If it's a different error (e.g., Invalid Argument), we might want to stop, but for now let's keep trying.
                 lastError = error;
+
+                // Add a small delay before trying the next model to avoid hammering the API
+                await sleep(1000);
             }
         }
 
@@ -68,7 +99,7 @@ export async function POST(req: NextRequest) {
         console.error("All models failed. Last error:", lastError);
         return NextResponse.json(
             { error: `All models failed. Last error: ${lastError?.message || "Unknown error"}` },
-            { status: 503 } // Service Unavailable
+            { status: 503 }
         );
 
     } catch (error: any) {
