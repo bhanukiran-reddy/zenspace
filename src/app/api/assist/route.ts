@@ -95,6 +95,7 @@ export async function POST(req: NextRequest) {
             }
         }
 
+
         // If we get here, all models failed
         console.error("All models failed. Last error:", lastError);
         return NextResponse.json(
