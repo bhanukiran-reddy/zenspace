@@ -16,17 +16,15 @@ import {
   Video,
   Lightbulb,
   Compass,
-  Zap,
-  Star,
   TrendingUp,
-  Eye,
-  Layers,
-  Palette,
   Brain,
-  Mic,
   Camera,
-  Box,
   ExternalLink,
+  ArrowUpRight,
+  Search,
+  Layers,
+  Menu,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import VisualAssistant from "@/components/VisualAssistant";
@@ -73,6 +71,7 @@ export default function Home() {
   const [showThinking, setShowThinking] = useState(false);
   const [showAssistant, setShowAssistant] = useState(false);
   const [activeTab, setActiveTab] = useState<"plan" | "shopping">("plan");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleGenerateImage = async (actionIndex: number, prompt: string) => {
@@ -92,8 +91,6 @@ export default function Home() {
           generated_image: data.image,
         };
         setResult({ ...result, agent_actions: updatedActions });
-      } else if (data.error) {
-        console.error("Image generation failed:", data.error);
       }
     } catch (error) {
       console.error("Error generating image:", error);
@@ -136,652 +133,581 @@ export default function Home() {
     }
   };
 
-  // Get shopping items from actions
   const shoppingItems = result?.agent_actions.filter(a => a.action_type === "ADD_ASSET" && a.shopping_search_query) || [];
 
   return (
-    <div className="flex h-screen overflow-hidden bg-black text-white selection:bg-violet-500/30">
-      {/* Sidebar */}
-      <aside className="w-72 flex flex-col bg-zinc-950 border-r border-white/5 shadow-xl z-20">
-        {/* Sidebar Header */}
-        <div className="flex items-center gap-3 p-6 border-b border-white/5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-500/20">
-            <Sparkles className="h-5 w-5 text-white" />
+    <div className="flex h-screen overflow-hidden bg-[#09090b] text-zinc-100 selection:bg-white/10">
+      {/* ── Mobile sidebar backdrop ── */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* ── Sidebar ── */}
+      <aside className={cn(
+        "fixed inset-y-0 left-0 z-50 w-64 flex flex-col border-r border-zinc-800/80 bg-[#09090b] transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0",
+        sidebarOpen ? "translate-x-0" : "-translate-x-full"
+      )}>
+        {/* Logo */}
+        <div className="flex items-center gap-3 px-5 h-14 border-b border-zinc-800/80">
+          <div className="h-7 w-7 rounded-md bg-white flex items-center justify-center">
+            <Layers className="h-4 w-4 text-black" />
           </div>
-          <div>
-            <h1 className="text-lg font-bold bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
-              ZenSpace
-            </h1>
-            <p className="text-[10px] text-zinc-500 font-mono tracking-widest">
-              SPATIAL REALITY ARCHITECT
-            </p>
-          </div>
+          <span className="text-sm font-semibold tracking-tight">ZenSpace</span>
+          <span className="ml-auto text-[10px] text-zinc-600 font-mono">v1.0</span>
+          <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-1 text-zinc-400 hover:text-white">
+            <X className="h-4 w-4" />
+          </button>
         </div>
 
-        {/* Features */}
-        <div className="flex-1 p-5 space-y-6 overflow-y-auto">
-          {/* Gemini 3 Badge */}
-          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-violet-500/10 to-indigo-500/10 border border-violet-500/20">
-            <Zap className="h-4 w-4 text-violet-400" />
-            <span className="text-xs font-mono text-violet-300 tracking-wider">POWERED BY GEMINI 3</span>
-          </div>
+        <div className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+          {/* Nav items */}
+          <p className="px-2 mb-2 text-[10px] font-medium uppercase tracking-widest text-zinc-600">Modes</p>
 
-          {/* Capabilities */}
-          <div className="space-y-3">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-600">Capabilities</p>
+          <button
+            onClick={() => { setShowAssistant(false); setResult(null); setImage(null); setSidebarOpen(false); }}
+            className={cn(
+              "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors",
+              !showAssistant ? "bg-zinc-800/60 text-white" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/30"
+            )}
+          >
+            <Upload className="h-4 w-4" />
+            Upload & Analyze
+          </button>
+
+          <button
+            onClick={() => { setShowAssistant(true); setSidebarOpen(false); }}
+            className={cn(
+              "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors",
+              showAssistant ? "bg-zinc-800/60 text-white" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/30"
+            )}
+          >
+            <Camera className="h-4 w-4" />
+            Live Assistant
+          </button>
+
+          <div className="h-px bg-zinc-800/60 my-4" />
+
+          <p className="px-2 mb-2 text-[10px] font-medium uppercase tracking-widest text-zinc-600">Powered by</p>
+
+          <div className="space-y-0.5 px-2">
             {[
-              { icon: Brain, label: "Deep Spatial Reasoning", desc: "Physics-based room analysis" },
-              { icon: Lightbulb, label: "Lighting Optimization", desc: "Glare, shadow & ambiance" },
-              { icon: Wand2, label: "AI Renovation Plan", desc: "Furniture & layout suggestions" },
-              { icon: ImageIcon, label: "Product Previews", desc: "AI-generated item images" },
-              { icon: ShoppingBag, label: "Smart Shopping", desc: "Curated product recommendations" },
-              { icon: Camera, label: "Live AR Mode", desc: "Real-time object detection" },
-              { icon: Mic, label: "Voice Assistant", desc: "Speak to analyze your space" },
-              { icon: Palette, label: "Style Transform", desc: "6 design presets available" },
-            ].map((cap, i) => (
-              <div key={i} className="flex items-start gap-3 p-2 rounded-lg hover:bg-white/[0.02] transition-colors">
-                <cap.icon className="h-4 w-4 text-violet-400 mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-sm text-zinc-200 font-medium">{cap.label}</p>
-                  <p className="text-[11px] text-zinc-500">{cap.desc}</p>
-                </div>
+              { label: "Gemini 3 Pro", desc: "Deep spatial reasoning" },
+              { label: "Gemini 3 Flash", desc: "Real-time vision & chat" },
+              { label: "Nano Banana Pro", desc: "Image generation" },
+            ].map((m, i) => (
+              <div key={i} className="py-1.5">
+                <p className="text-xs text-zinc-300">{m.label}</p>
+                <p className="text-[11px] text-zinc-600">{m.desc}</p>
               </div>
             ))}
           </div>
 
-          {/* Live Assistant CTA */}
-          <div className="pt-4 border-t border-white/5">
-            <button
-              onClick={() => setShowAssistant(true)}
-              className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 shadow-lg shadow-violet-500/20 transition-all hover:scale-[1.02] hover:shadow-violet-500/30"
-            >
-              <div className="relative">
-                <Video className="h-5 w-5 relative z-10" />
-                <div className="absolute inset-0 bg-white/20 blur-lg animate-pulse" />
-              </div>
-              <div className="text-left">
-                <span className="block">Live AR Assistant</span>
-                <span className="block text-[10px] font-normal text-violet-200/60">
-                  Camera • Voice • Products • Transform
-                </span>
-              </div>
-            </button>
-          </div>
+          <div className="h-px bg-zinc-800/60 my-4" />
 
-          {/* How It Works */}
-          <div className="space-y-3">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-600">How It Works</p>
-            {[
-              { step: "01", text: "Upload a room photo" },
-              { step: "02", text: "Describe your vision (optional)" },
-              { step: "03", text: "AI generates renovation blueprint" },
-              { step: "04", text: "Preview AI-generated products" },
-              { step: "05", text: "Shop suggested items directly" },
-            ].map((s, i) => (
-              <div key={i} className="flex items-center gap-3 text-xs">
-                <span className="font-mono text-violet-500/50">{s.step}</span>
-                <span className="text-zinc-400">{s.text}</span>
-              </div>
-            ))}
+          <p className="px-2 mb-2 text-[10px] font-medium uppercase tracking-widest text-zinc-600">Capabilities</p>
+          <div className="space-y-0.5 px-2 text-[11px] text-zinc-500">
+            <p>Spatial analysis & reasoning</p>
+            <p>Real-time object detection</p>
+            <p>Product search via Google</p>
+            <p>AI image generation</p>
+            <p>Voice & text conversation</p>
+            <p>AR overlay & transforms</p>
+            <p>6 style presets</p>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="p-5 border-t border-white/5">
-          <p className="text-[10px] text-zinc-600 text-center font-mono">
-            ZENSPACE v1.0 • GEMINI 3 HACKATHON 2026
-          </p>
+        <div className="px-5 py-3 border-t border-zinc-800/80">
+          <p className="text-[10px] text-zinc-700 font-mono">Gemini 3 Hackathon 2026</p>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto bg-black relative">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-violet-900/20 via-black to-black pointer-events-none" />
-        <div className="relative max-w-5xl mx-auto px-8 py-10">
-          {!result && !loading && (
-            <div className="space-y-10 animate-fade-in-up">
+      {/* ── Main ── */}
+      <main className="flex-1 overflow-y-auto bg-[#09090b] relative w-full">
+        {/* Mobile header bar */}
+        <div className="sticky top-0 z-30 flex items-center gap-3 px-4 h-12 bg-[#09090b]/95 backdrop-blur border-b border-zinc-800/80 lg:hidden">
+          <button onClick={() => setSidebarOpen(true)} className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800/50 transition-colors">
+            <Menu className="h-5 w-5" />
+          </button>
+          <div className="flex items-center gap-2">
+            <div className="h-6 w-6 rounded-md bg-white flex items-center justify-center">
+              <Layers className="h-3.5 w-3.5 text-black" />
+            </div>
+            <span className="text-sm font-semibold tracking-tight">ZenSpace</span>
+          </div>
+        </div>
+
+        <div className="relative max-w-4xl mx-auto px-4 py-6 sm:px-6 md:px-8 md:py-10">
+
+          {/* ═══ Landing / Upload ═══ */}
+          {!result && !loading && !showAssistant && (
+            <div className="space-y-6 sm:space-y-8 md:space-y-10 animate-fade-in-up">
               {/* Hero */}
-              <div className="text-center space-y-4 max-w-2xl mx-auto mb-8">
-                <Badge className="bg-violet-500/10 border border-violet-500/20 text-violet-300 font-mono text-xs px-3 py-1">
-                  <Star className="h-3 w-3 mr-1.5" /> GEMINI 3 POWERED
-                </Badge>
-                <h1 className="text-5xl md:text-6xl font-bold tracking-tight text-white">
-                  Transform{" "}
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-indigo-400">
-                    Your Space
-                  </span>
+              <div className="space-y-3 max-w-xl">
+                <p className="text-[10px] sm:text-xs font-medium text-zinc-500 uppercase tracking-widest">AI Spatial Intelligence</p>
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-white leading-[1.15]">
+                  Analyze any room.<br />
+                  <span className="text-zinc-500">Get a renovation blueprint.</span>
                 </h1>
-                <p className="text-base text-zinc-400 leading-relaxed font-light max-w-lg mx-auto">
-                  Upload a room photo and let our autonomous AI architect generate a complete renovation
-                  blueprint — with product suggestions, preview images, and direct shopping links.
+                <p className="text-xs sm:text-sm text-zinc-500 leading-relaxed max-w-md">
+                  Upload a photo of your space. Gemini 3 will analyze lighting, layout, and flow — then suggest real products you can buy, with AI-generated previews.
                 </p>
               </div>
 
-              {/* Upload Area */}
-              <div className="max-w-3xl mx-auto space-y-6">
-                <Card className="bg-zinc-900/50 border-white/5 backdrop-blur-sm shadow-2xl rounded-3xl overflow-hidden">
-                  <CardContent className="p-2">
-                    <div
-                      onClick={() => fileInputRef.current?.click()}
-                      className={cn(
-                        "relative group cursor-pointer rounded-2xl transition-all duration-500 border-2 border-dashed",
-                        image
-                          ? "aspect-video border-transparent"
-                          : "min-h-[350px] flex items-center justify-center border-white/10 hover:border-violet-500/50 hover:bg-violet-500/5"
-                      )}
-                    >
-                      {image ? (
-                        <>
-                          <img src={image} alt="Room" className="w-full h-full object-cover rounded-xl" />
-                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <Button className="bg-white/10 backdrop-blur-md hover:bg-white/20 border border-white/20 text-white rounded-full px-6">
-                              <Upload className="mr-2 h-4 w-4" />
-                              Change Photo
-                            </Button>
-                          </div>
-                        </>
-                      ) : (
-                        <div className="text-center p-12 space-y-5">
-                          <div className="relative inline-flex items-center justify-center w-20 h-20 rounded-full bg-zinc-900 border border-white/10 group-hover:scale-110 transition-transform duration-500">
-                            <div className="absolute inset-0 bg-violet-500/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                            <Upload className="h-8 w-8 text-zinc-400 group-hover:text-violet-400 transition-colors" />
-                          </div>
-                          <div>
-                            <p className="text-white text-lg font-medium mb-1">
-                              Drop your room image here
-                            </p>
-                            <p className="text-sm text-zinc-500">or click to browse from your device</p>
-                          </div>
-                        </div>
-                      )}
+              {/* Upload */}
+              <div className="space-y-4">
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className={cn(
+                    "relative group cursor-pointer rounded-xl transition-all border",
+                    image
+                      ? "aspect-video border-zinc-800 overflow-hidden"
+                      : "min-h-[180px] sm:min-h-[220px] md:min-h-[280px] flex items-center justify-center border-dashed border-zinc-800 hover:border-zinc-600 bg-zinc-900/30"
+                  )}
+                >
+                  {image ? (
+                    <>
+                      <img src={image} alt="Room" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span className="text-sm text-white/80">Click to change</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center space-y-3 p-10">
+                      <div className="inline-flex items-center justify-center h-12 w-12 rounded-lg bg-zinc-800/80 border border-zinc-700/50">
+                        <Upload className="h-5 w-5 text-zinc-400" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-zinc-300">Drop a room photo here</p>
+                        <p className="text-xs text-zinc-600 mt-1">or click to browse</p>
+                      </div>
                     </div>
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleImageUpload}
-                      accept="image/*"
-                      className="hidden"
-                    />
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-zinc-900/50 border-white/5 backdrop-blur-sm shadow-xl rounded-3xl">
-                  <CardContent className="p-6 space-y-5">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-zinc-300">
-                        Describe Your Vision <span className="text-zinc-600">(Optional)</span>
-                      </label>
-                      <Input
-                        type="text"
-                        value={userPrompt}
-                        onChange={(e) => setUserPrompt(e.target.value)}
-                        placeholder="e.g., Modern minimalist office with natural lighting, cozy reading nook..."
-                        className="h-12 bg-black/40 text-white placeholder:text-zinc-600 focus:bg-black/60 border-white/10 rounded-xl focus:ring-violet-500/50 focus:border-violet-500/50"
-                      />
-                    </div>
-
-                    <Button
-                      onClick={handleAnalyze}
-                      disabled={!image || loading}
-                      size="lg"
-                      className={cn(
-                        "w-full h-13 text-base font-bold rounded-xl transition-all duration-300",
-                        !image || loading
-                          ? "bg-zinc-800 text-zinc-500 cursor-not-allowed"
-                          : "bg-white text-black hover:bg-zinc-200 hover:scale-[1.01] shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)]"
-                      )}
-                    >
-                      {loading ? (
-                        <>
-                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                          Gemini 3 is thinking...
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="mr-2 h-5 w-5" />
-                          Generate Blueprint
-                          <ArrowRight className="ml-2 h-5 w-5" />
-                        </>
-                      )}
-                    </Button>
-                  </CardContent>
-                </Card>
-
-                {/* Feature Showcase Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-                  <Card className="bg-zinc-900/30 border-white/5 rounded-2xl hover:border-violet-500/20 transition-all">
-                    <CardContent className="p-5 text-center space-y-3">
-                      <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-violet-500/10 border border-violet-500/20">
-                        <Brain className="h-5 w-5 text-violet-400" />
-                      </div>
-                      <h3 className="text-sm font-bold text-white">Deep Analysis</h3>
-                      <p className="text-xs text-zinc-500">Physics-based spatial reasoning with lighting, ergonomics, and flow analysis</p>
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-zinc-900/30 border-white/5 rounded-2xl hover:border-violet-500/20 transition-all">
-                    <CardContent className="p-5 text-center space-y-3">
-                      <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/20">
-                        <ShoppingBag className="h-5 w-5 text-amber-400" />
-                      </div>
-                      <h3 className="text-sm font-bold text-white">Smart Shopping</h3>
-                      <p className="text-xs text-zinc-500">AI-curated product suggestions with previews and direct shopping links</p>
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-zinc-900/30 border-white/5 rounded-2xl hover:border-violet-500/20 transition-all">
-                    <CardContent className="p-5 text-center space-y-3">
-                      <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-cyan-500/10 border border-cyan-500/20">
-                        <Layers className="h-5 w-5 text-cyan-400" />
-                      </div>
-                      <h3 className="text-sm font-bold text-white">AR Transform</h3>
-                      <p className="text-xs text-zinc-500">Live camera object detection, style transformation, and real-time overlay</p>
-                    </CardContent>
-                  </Card>
+                  )}
                 </div>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleImageUpload}
+                  accept="image/*"
+                  className="hidden"
+                />
+
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                  <Input
+                    type="text"
+                    value={userPrompt}
+                    onChange={(e) => setUserPrompt(e.target.value)}
+                    placeholder="Describe your vision (optional)"
+                    className="h-10 bg-zinc-900/50 text-zinc-200 placeholder:text-zinc-600 border-zinc-800 rounded-lg focus:ring-1 focus:ring-zinc-600 focus:border-zinc-600"
+                  />
+                  <Button
+                    onClick={handleAnalyze}
+                    disabled={!image || loading}
+                    className={cn(
+                      "h-10 px-5 rounded-lg font-medium text-sm shrink-0 w-full sm:w-auto",
+                      !image || loading
+                        ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                        : "bg-white text-black hover:bg-zinc-200"
+                    )}
+                  >
+                    {loading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>Analyze <ArrowRight className="ml-1.5 h-3.5 w-3.5" /></>
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Feature cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-4">
+                {[
+                  { icon: Brain, title: "Spatial Reasoning", desc: "Physics-based analysis of lighting, ergonomics, acoustics, and flow" },
+                  { icon: Search, title: "Real Products", desc: "Google Search grounded suggestions from actual retailers with prices" },
+                  { icon: Camera, title: "Live AR", desc: "Real-time detection, style transforms, and voice conversation" },
+                ].map((f, i) => (
+                  <div key={i} className="p-4 rounded-xl border border-zinc-800/60 bg-zinc-900/20 space-y-2">
+                    <f.icon className="h-4 w-4 text-zinc-500" />
+                    <p className="text-sm font-medium text-zinc-300">{f.title}</p>
+                    <p className="text-xs text-zinc-600 leading-relaxed">{f.desc}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Live mode CTA */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-4 rounded-xl border border-zinc-800/60 bg-zinc-900/20">
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                  <div className="h-10 w-10 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
+                    <Video className="h-4 w-4 text-zinc-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-zinc-300">Live AR Assistant</p>
+                    <p className="text-xs text-zinc-600">Camera, voice, object detection, product suggestions, style transforms</p>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => setShowAssistant(true)}
+                  className="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-sm rounded-lg h-9 px-4 shrink-0 w-full sm:w-auto"
+                >
+                  Open <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
+                </Button>
               </div>
             </div>
           )}
 
-          {/* Loading State */}
+          {/* ═══ Loading ═══ */}
           {loading && !result && (
-            <div className="max-w-4xl mx-auto space-y-6 animate-fade-in-up">
-              <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-violet-500/10 border border-violet-500/20">
-                  <Loader2 className="h-4 w-4 animate-spin text-violet-400" />
-                  <span className="text-sm font-mono text-violet-300">GEMINI 3 PRO ANALYZING SPACE...</span>
-                </div>
-                <p className="text-xs text-zinc-500 mt-3">Deep spatial reasoning in progress — analyzing lighting, ergonomics, acoustics, and flow</p>
+            <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6 animate-fade-in-up">
+              <div className="flex items-center gap-3 mb-4 sm:mb-8">
+                <Loader2 className="h-4 w-4 animate-spin text-zinc-400" />
+                <span className="text-sm text-zinc-400">Gemini 3 Pro is analyzing your space...</span>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <Skeleton className="h-28 rounded-2xl bg-zinc-900/50" />
-                <Skeleton className="h-28 rounded-2xl bg-zinc-900/50" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Skeleton className="h-24 rounded-xl bg-zinc-900/50" />
+                <Skeleton className="h-24 rounded-xl bg-zinc-900/50" />
               </div>
-              <Skeleton className="h-24 rounded-2xl bg-zinc-900/50" />
-              <Skeleton className="h-48 rounded-2xl bg-zinc-900/50" />
-              <Skeleton className="h-48 rounded-2xl bg-zinc-900/50" />
+              <Skeleton className="h-20 rounded-xl bg-zinc-900/50" />
+              <Skeleton className="h-40 rounded-xl bg-zinc-900/50" />
+              <Skeleton className="h-40 rounded-xl bg-zinc-900/50" />
             </div>
           )}
 
-          {/* Results */}
+          {/* ═══ Results ═══ */}
           {result && !result.error && (
-            <div className="max-w-4xl mx-auto space-y-8 animate-fade-in-up">
-              {/* Back Button */}
-              <Button
-                variant="ghost"
-                onClick={() => { setResult(null); setImage(null); }}
-                className="text-zinc-400 hover:text-white"
-              >
-                ← New Analysis
-              </Button>
+            <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6 animate-fade-in-up">
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={() => { setResult(null); setImage(null); }}
+                  className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors"
+                >
+                  ← New analysis
+                </button>
+                <div className="flex items-center gap-2 text-xs text-zinc-600">
+                  <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                  Analysis complete
+                </div>
+              </div>
 
-              {/* Room Image */}
+              {/* Room image */}
               {image && (
-                <div className="relative rounded-2xl overflow-hidden max-h-[300px]">
-                  <img src={image} alt="Analyzed Room" className="w-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
-                  <div className="absolute bottom-4 left-4 flex gap-2">
-                    <Badge className="bg-white/10 backdrop-blur-md text-white border-white/20">
-                      {result.room_analysis.room_type || "Room"} Analyzed
-                    </Badge>
-                    <Badge className="bg-violet-500/20 backdrop-blur-md text-violet-300 border-violet-500/20">
-                      <Sparkles className="h-2.5 w-2.5 mr-1" /> Gemini 3 Pro
-                    </Badge>
+                <div className="relative rounded-xl overflow-hidden border border-zinc-800/60">
+                  <img src={image} alt="Analyzed Room" className="w-full max-h-[260px] object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#09090b] via-transparent to-transparent" />
+                  <div className="absolute bottom-3 left-3 flex gap-2">
+                    {result.room_analysis.room_type && (
+                      <span className="text-[11px] text-zinc-300 bg-black/60 backdrop-blur px-2.5 py-1 rounded-md border border-zinc-700/50">
+                        {result.room_analysis.room_type}
+                      </span>
+                    )}
+                    <span className="text-[11px] text-zinc-400 bg-black/60 backdrop-blur px-2.5 py-1 rounded-md border border-zinc-700/50">
+                      Gemini 3 Pro
+                    </span>
                   </div>
                 </div>
               )}
 
-              {/* Summary Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card className="bg-zinc-900/50 border-white/5 rounded-2xl">
-                  <CardContent className="p-5">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Vibe Score</p>
-                    <p className="text-4xl font-bold text-violet-400">
-                      {result.room_analysis.vibe_score}
-                      <span className="text-lg text-zinc-600">/10</span>
+              {/* Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[
+                  { label: "Vibe", value: result.room_analysis.vibe_score, suffix: "/10", color: "text-white" },
+                  { label: "Issues", value: result.room_analysis.identified_problems.length, color: "text-amber-400" },
+                  { label: "Actions", value: result.agent_actions.length, color: "text-white" },
+                  { label: "Products", value: shoppingItems.length, color: "text-white" },
+                ].map((s, i) => (
+                  <div key={i} className="p-4 rounded-xl border border-zinc-800/60 bg-zinc-900/20">
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-600 mb-1">{s.label}</p>
+                    <p className={cn("text-2xl font-semibold", s.color)}>
+                      {s.value}<span className="text-sm text-zinc-700">{s.suffix || ""}</span>
                     </p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-zinc-900/50 border-white/5 rounded-2xl">
-                  <CardContent className="p-5">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Issues</p>
-                    <p className="text-4xl font-bold text-amber-400">
-                      {result.room_analysis.identified_problems.length}
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-zinc-900/50 border-white/5 rounded-2xl">
-                  <CardContent className="p-5">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Actions</p>
-                    <p className="text-4xl font-bold text-green-400">
-                      {result.agent_actions.length}
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-zinc-900/50 border-white/5 rounded-2xl">
-                  <CardContent className="p-5">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Shop Items</p>
-                    <p className="text-4xl font-bold text-cyan-400">
-                      {shoppingItems.length}
-                    </p>
-                  </CardContent>
-                </Card>
+                  </div>
+                ))}
               </div>
 
-              {/* Lighting & Spatial Analysis */}
+              {/* Lighting & Spatial */}
               {(result.room_analysis.lighting_analysis || result.room_analysis.spatial_flow) && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {result.room_analysis.lighting_analysis && (
-                    <Card className="bg-zinc-900/50 border-white/5 rounded-2xl">
-                      <CardContent className="p-5">
-                        <div className="flex items-center gap-2 mb-3">
-                          <Lightbulb className="h-4 w-4 text-amber-400" />
-                          <p className="text-xs font-bold uppercase tracking-widest text-zinc-400">Lighting</p>
-                        </div>
-                        <p className="text-sm text-zinc-300">{result.room_analysis.lighting_analysis}</p>
-                      </CardContent>
-                    </Card>
+                    <div className="p-4 rounded-xl border border-zinc-800/60 bg-zinc-900/20">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Lightbulb className="h-3.5 w-3.5 text-zinc-500" />
+                        <p className="text-xs font-medium text-zinc-400">Lighting</p>
+                      </div>
+                      <p className="text-sm text-zinc-300 leading-relaxed">{result.room_analysis.lighting_analysis}</p>
+                    </div>
                   )}
                   {result.room_analysis.spatial_flow && (
-                    <Card className="bg-zinc-900/50 border-white/5 rounded-2xl">
-                      <CardContent className="p-5">
-                        <div className="flex items-center gap-2 mb-3">
-                          <Compass className="h-4 w-4 text-blue-400" />
-                          <p className="text-xs font-bold uppercase tracking-widest text-zinc-400">Spatial Flow</p>
-                        </div>
-                        <p className="text-sm text-zinc-300">{result.room_analysis.spatial_flow}</p>
-                      </CardContent>
-                    </Card>
+                    <div className="p-4 rounded-xl border border-zinc-800/60 bg-zinc-900/20">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Compass className="h-3.5 w-3.5 text-zinc-500" />
+                        <p className="text-xs font-medium text-zinc-400">Spatial Flow</p>
+                      </div>
+                      <p className="text-sm text-zinc-300 leading-relaxed">{result.room_analysis.spatial_flow}</p>
+                    </div>
                   )}
                 </div>
               )}
 
               {/* Issues */}
               {result.room_analysis.identified_problems.length > 0 && (
-                <Card className="bg-amber-500/5 border-amber-500/20 rounded-2xl">
-                  <CardContent className="p-5">
-                    <div className="flex items-center gap-2 mb-4">
-                      <AlertCircle className="h-5 w-5 text-amber-400" />
-                      <CardTitle className="text-amber-200 text-sm font-bold uppercase tracking-wider">
-                        Identified Issues
-                      </CardTitle>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {result.room_analysis.identified_problems.map((problem, i) => (
-                        <Badge key={i} className="bg-amber-500/10 text-amber-200 border-amber-500/20 text-xs">
-                          {problem}
-                        </Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
+                <div className="p-4 rounded-xl border border-zinc-800/60 bg-zinc-900/20">
+                  <div className="flex items-center gap-2 mb-3">
+                    <AlertCircle className="h-3.5 w-3.5 text-amber-500/70" />
+                    <p className="text-xs font-medium text-zinc-400">Issues Found</p>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {result.room_analysis.identified_problems.map((problem, i) => (
+                      <span key={i} className="text-xs text-zinc-300 bg-zinc-800/60 px-2.5 py-1 rounded-md border border-zinc-700/40">
+                        {problem}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               )}
 
-              {/* Tab Switcher: Plan vs Shopping */}
-              <div className="flex bg-zinc-900/50 rounded-xl p-1 border border-white/5">
+              {/* Tabs */}
+              <div className="flex gap-1 bg-zinc-900/50 rounded-lg p-1 border border-zinc-800/60">
                 <button
                   onClick={() => setActiveTab("plan")}
-                  className={cn("flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2",
+                  className={cn("flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-1.5",
                     activeTab === "plan"
-                      ? "bg-violet-500/20 text-violet-300 border border-violet-500/20"
+                      ? "bg-zinc-800 text-white"
                       : "text-zinc-500 hover:text-zinc-300"
                   )}>
-                  <Wand2 className="h-4 w-4" /> Renovation Plan
+                  <Wand2 className="h-3.5 w-3.5" /> Renovation Plan
                 </button>
                 <button
                   onClick={() => setActiveTab("shopping")}
-                  className={cn("flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2",
+                  className={cn("flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-1.5",
                     activeTab === "shopping"
-                      ? "bg-amber-500/20 text-amber-300 border border-amber-500/20"
+                      ? "bg-zinc-800 text-white"
                       : "text-zinc-500 hover:text-zinc-300"
                   )}>
-                  <ShoppingBag className="h-4 w-4" /> Shopping List ({shoppingItems.length})
+                  <ShoppingBag className="h-3.5 w-3.5" /> Shopping ({shoppingItems.length})
                 </button>
               </div>
 
               {/* PLAN TAB */}
               {activeTab === "plan" && (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {result.agent_actions.map((action, i) => (
-                    <Card key={i} className="bg-zinc-900/50 border-white/5 rounded-2xl hover:border-violet-500/20 transition-all">
-                      <CardContent className="p-5 space-y-4">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-center gap-3">
+                    <div key={i} className="p-4 rounded-xl border border-zinc-800/60 bg-zinc-900/20 space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3">
+                          <div className="h-8 w-8 rounded-lg bg-zinc-800/80 flex items-center justify-center shrink-0 mt-0.5">
                             {action.action_type === "ADD_ASSET" ? (
-                              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-500/10 border border-violet-500/20">
-                                <ShoppingBag className="h-4 w-4 text-violet-400" />
-                              </div>
+                              <ShoppingBag className="h-3.5 w-3.5 text-zinc-400" />
                             ) : (
-                              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/10 border border-blue-500/20">
-                                <Wrench className="h-4 w-4 text-blue-400" />
-                              </div>
+                              <Wrench className="h-3.5 w-3.5 text-zinc-400" />
                             )}
-                            <div>
-                              <Badge className="bg-white/5 text-zinc-400 border-white/10 text-[10px] mb-1">
-                                {action.action_type === "ADD_ASSET" ? "Add Item" : "Note"}
-                                {action.estimated_impact && (
-                                  <span className={cn(
-                                    "ml-2",
-                                    action.estimated_impact === "high" ? "text-green-400" :
-                                    action.estimated_impact === "medium" ? "text-amber-400" : "text-zinc-500"
-                                  )}>
-                                    • {action.estimated_impact} impact
-                                  </span>
-                                )}
-                              </Badge>
-                              <h4 className="text-base font-semibold text-white">
-                                {action.item_name || "Instruction"}
-                              </h4>
-                            </div>
                           </div>
-                          {action.shopping_search_query && (
-                            <Button size="sm" asChild className="bg-white/5 hover:bg-white/10 text-zinc-300 border border-white/10 rounded-full text-xs">
-                              <a href={`https://www.google.com/search?tbm=shop&q=${encodeURIComponent(action.shopping_search_query)}`} target="_blank" rel="noopener noreferrer">
-                                <ShoppingBag className="mr-1.5 h-3 w-3" /> Shop →
-                              </a>
-                            </Button>
+                          <div>
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <h4 className="text-sm font-medium text-white">{action.item_name || "Instruction"}</h4>
+                              {action.estimated_impact && (
+                                <span className={cn("text-[10px] px-1.5 py-0.5 rounded border",
+                                  action.estimated_impact === "high" ? "text-green-400 border-green-500/20 bg-green-500/5" :
+                                  action.estimated_impact === "medium" ? "text-amber-400 border-amber-500/20 bg-amber-500/5" :
+                                  "text-zinc-500 border-zinc-700/40 bg-zinc-800/30"
+                                )}>
+                                  {action.estimated_impact}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-zinc-500">{action.action_type === "ADD_ASSET" ? "Add Item" : "Note"}</p>
+                          </div>
+                        </div>
+                        {action.shopping_search_query && (
+                          <a href={`https://www.google.com/search?tbm=shop&q=${encodeURIComponent(action.shopping_search_query)}`}
+                            target="_blank" rel="noopener noreferrer"
+                            className="text-xs text-zinc-500 hover:text-zinc-300 flex items-center gap-1 shrink-0">
+                            Shop <ExternalLink className="h-3 w-3" />
+                          </a>
+                        )}
+                      </div>
+
+                      {action.reason && (
+                        <p className="text-sm text-zinc-400 leading-relaxed">{action.reason}</p>
+                      )}
+
+                      {action.placement_guide && (
+                        <div className="flex items-start gap-2.5 p-3 rounded-lg bg-zinc-800/30 border border-zinc-800/60">
+                          <MapPin className="h-3.5 w-3.5 text-zinc-500 mt-0.5 shrink-0" />
+                          <div>
+                            <p className="text-[10px] font-medium uppercase text-zinc-600 mb-0.5">Placement</p>
+                            <p className="text-xs text-zinc-400">{action.placement_guide}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {action.instruction && (
+                        <div className="p-3 rounded-lg bg-zinc-800/30 border border-zinc-800/60">
+                          <p className="text-xs text-zinc-400">{action.instruction}</p>
+                          {action.priority && (
+                            <span className={cn("inline-block mt-2 text-[10px] px-1.5 py-0.5 rounded border",
+                              action.priority === "urgent" ? "text-red-400 border-red-500/20 bg-red-500/5" :
+                              action.priority === "recommended" ? "text-amber-400 border-amber-500/20 bg-amber-500/5" :
+                              "text-zinc-500 border-zinc-700/40 bg-zinc-800/30"
+                            )}>
+                              {action.priority}
+                            </span>
                           )}
                         </div>
+                      )}
 
-                        <p className="text-sm text-zinc-400">{action.reason}</p>
-
-                        {action.placement_guide && (
-                          <div className="flex items-start gap-3 p-3 rounded-xl bg-violet-500/5 border border-violet-500/10">
-                            <MapPin className="h-4 w-4 text-violet-400 mt-0.5 shrink-0" />
-                            <div>
-                              <p className="text-[10px] font-bold uppercase text-violet-400/60 mb-0.5">Placement Guide</p>
-                              <p className="text-xs text-zinc-300">{action.placement_guide}</p>
+                      {action.action_type === "ADD_ASSET" && action.nano_banana_prompt && (
+                        <div>
+                          {action.generated_image ? (
+                            <div className="relative rounded-lg overflow-hidden bg-zinc-800/30 border border-zinc-800/60">
+                              <img src={action.generated_image} alt={action.item_name || "Preview"} className="w-full h-44 object-contain" />
+                              <span className="absolute bottom-2 right-2 text-[10px] text-zinc-500 bg-black/60 backdrop-blur px-2 py-0.5 rounded">
+                                AI Generated
+                              </span>
                             </div>
-                          </div>
-                        )}
-
-                        {action.instruction && (
-                          <div className="p-3 rounded-xl bg-blue-500/5 border border-blue-500/10">
-                            <p className="text-xs text-zinc-300 italic">{action.instruction}</p>
-                            {action.priority && (
-                              <Badge className={cn("mt-2 text-[9px]",
-                                action.priority === "urgent" ? "bg-red-500/10 text-red-400 border-red-500/20" :
-                                action.priority === "recommended" ? "bg-amber-500/10 text-amber-400 border-amber-500/20" :
-                                "bg-zinc-500/10 text-zinc-400 border-zinc-500/20"
-                              )}>
-                                {action.priority}
-                              </Badge>
-                            )}
-                          </div>
-                        )}
-
-                        {action.action_type === "ADD_ASSET" && action.nano_banana_prompt && (
-                          <div>
-                            {action.generated_image ? (
-                              <div className="relative rounded-xl overflow-hidden bg-zinc-800/50">
-                                <img src={action.generated_image} alt={action.item_name || "Preview"} className="w-full h-48 object-contain" />
-                                <Badge className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-md text-violet-300 border-violet-500/20">
-                                  <Sparkles className="h-2.5 w-2.5 mr-1" /> Gemini 3 Generated
-                                </Badge>
-                              </div>
-                            ) : (
-                              <Button
-                                onClick={() => handleGenerateImage(i, action.nano_banana_prompt!)}
-                                disabled={generatingImageIndex !== null}
-                                className="w-full bg-white/5 hover:bg-white/10 text-zinc-300 border border-white/10 rounded-xl"
-                              >
-                                {generatingImageIndex === i ? (
-                                  <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Generating via Gemini 3...
-                                  </>
-                                ) : (
-                                  <>
-                                    <ImageIcon className="mr-2 h-4 w-4" />
-                                    Generate Preview Image
-                                  </>
-                                )}
-                              </Button>
-                            )}
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
+                          ) : (
+                            <button
+                              onClick={() => handleGenerateImage(i, action.nano_banana_prompt!)}
+                              disabled={generatingImageIndex !== null}
+                              className="w-full py-2.5 rounded-lg bg-zinc-800/40 hover:bg-zinc-800/70 border border-zinc-800/60 text-sm text-zinc-500 hover:text-zinc-300 transition-colors flex items-center justify-center gap-2"
+                            >
+                              {generatingImageIndex === i ? (
+                                <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Generating...</>
+                              ) : (
+                                <><ImageIcon className="h-3.5 w-3.5" /> Generate Preview</>
+                              )}
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   ))}
                 </div>
               )}
 
               {/* SHOPPING TAB */}
               {activeTab === "shopping" && (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {shoppingItems.length === 0 ? (
-                    <div className="text-center py-12 text-zinc-500">
-                      <ShoppingBag className="h-12 w-12 mx-auto mb-4 opacity-30" />
-                      <p className="text-sm">No shopping items in the renovation plan</p>
+                    <div className="text-center py-16 text-zinc-600">
+                      <ShoppingBag className="h-8 w-8 mx-auto mb-3 opacity-40" />
+                      <p className="text-sm">No products in this plan</p>
                     </div>
                   ) : (
-                    <>
-                      <p className="text-xs text-zinc-500">
-                        All {shoppingItems.length} recommended products — click to shop on Google
-                      </p>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {shoppingItems.map((item, i) => {
-                          const actionIndex = result.agent_actions.indexOf(item);
-                          return (
-                            <Card key={i} className="bg-zinc-900/50 border-white/5 rounded-2xl overflow-hidden hover:border-violet-500/20 transition-all">
-                              {/* Product Image */}
-                              {item.generated_image ? (
-                                <div className="relative h-40 bg-zinc-800/50">
-                                  <img src={item.generated_image} alt={item.item_name || ""} className="w-full h-full object-contain" />
-                                  <Badge className="absolute top-2 right-2 bg-black/60 backdrop-blur-md text-violet-300 border-violet-500/20 text-[9px]">
-                                    <Sparkles className="h-2 w-2 mr-1" /> AI Preview
-                                  </Badge>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {shoppingItems.map((item, i) => {
+                        const actionIndex = result.agent_actions.indexOf(item);
+                        return (
+                          <div key={i} className="rounded-xl border border-zinc-800/60 bg-zinc-900/20 overflow-hidden">
+                            {item.generated_image ? (
+                              <div className="relative h-36 bg-zinc-900">
+                                <img src={item.generated_image} alt={item.item_name || ""} className="w-full h-full object-contain" />
+                                <span className="absolute top-2 right-2 text-[9px] text-zinc-500 bg-black/60 backdrop-blur px-2 py-0.5 rounded">
+                                  AI Preview
+                                </span>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => item.nano_banana_prompt && handleGenerateImage(actionIndex, item.nano_banana_prompt)}
+                                disabled={generatingImageIndex !== null}
+                                className="w-full h-28 bg-zinc-900/50 flex flex-col items-center justify-center gap-1.5 hover:bg-zinc-800/50 transition-colors"
+                              >
+                                {generatingImageIndex === actionIndex ? (
+                                  <Loader2 className="h-5 w-5 text-zinc-500 animate-spin" />
+                                ) : (
+                                  <>
+                                    <ImageIcon className="h-5 w-5 text-zinc-700" />
+                                    <span className="text-[10px] text-zinc-600">Generate preview</span>
+                                  </>
+                                )}
+                              </button>
+                            )}
+
+                            <div className="p-3.5 space-y-2">
+                              <div className="flex items-start justify-between gap-2">
+                                <h4 className="text-sm font-medium text-white leading-tight">{item.item_name}</h4>
+                                {item.estimated_impact && (
+                                  <span className={cn("text-[10px] px-1.5 py-0.5 rounded border shrink-0",
+                                    item.estimated_impact === "high" ? "text-green-400 border-green-500/20 bg-green-500/5" :
+                                    item.estimated_impact === "medium" ? "text-amber-400 border-amber-500/20 bg-amber-500/5" :
+                                    "text-zinc-500 border-zinc-700/40"
+                                  )}>
+                                    {item.estimated_impact}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-zinc-500 line-clamp-2">{item.reason}</p>
+
+                              {item.placement_guide && (
+                                <div className="flex items-start gap-1.5 text-[11px]">
+                                  <MapPin className="h-3 w-3 text-zinc-600 mt-0.5 shrink-0" />
+                                  <span className="text-zinc-600">{item.placement_guide}</span>
                                 </div>
-                              ) : (
-                                <button
-                                  onClick={() => item.nano_banana_prompt && handleGenerateImage(actionIndex, item.nano_banana_prompt)}
-                                  disabled={generatingImageIndex !== null}
-                                  className="w-full h-32 bg-gradient-to-br from-zinc-900 to-zinc-800 flex flex-col items-center justify-center gap-2 hover:from-violet-950/30 transition-all"
-                                >
-                                  {generatingImageIndex === actionIndex ? (
-                                    <Loader2 className="h-6 w-6 text-violet-400 animate-spin" />
-                                  ) : (
-                                    <>
-                                      <ImageIcon className="h-6 w-6 text-zinc-600" />
-                                      <span className="text-[10px] text-zinc-500">Generate Preview</span>
-                                    </>
-                                  )}
-                                </button>
                               )}
 
-                              <CardContent className="p-4 space-y-3">
-                                <div>
-                                  <h4 className="text-sm font-bold text-white">{item.item_name}</h4>
-                                  {item.estimated_impact && (
-                                    <Badge className={cn("mt-1 text-[9px] border",
-                                      item.estimated_impact === "high"
-                                        ? "bg-green-500/10 text-green-400 border-green-500/20"
-                                        : item.estimated_impact === "medium"
-                                        ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                                        : "bg-zinc-500/10 text-zinc-400 border-zinc-500/20"
-                                    )}>
-                                      <TrendingUp className="h-2 w-2 mr-0.5" /> {item.estimated_impact} impact
-                                    </Badge>
-                                  )}
-                                </div>
-                                <p className="text-[11px] text-zinc-400 line-clamp-2">{item.reason}</p>
-
-                                {item.placement_guide && (
-                                  <div className="flex items-start gap-2 text-[11px]">
-                                    <MapPin className="h-3 w-3 text-violet-400 mt-0.5 shrink-0" />
-                                    <span className="text-zinc-500">{item.placement_guide}</span>
-                                  </div>
-                                )}
-
-                                <a
-                                  href={`https://www.google.com/search?tbm=shop&q=${encodeURIComponent(item.shopping_search_query || item.item_name || "")}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white text-xs font-bold transition-all shadow-lg shadow-violet-500/10"
-                                >
-                                  <ShoppingBag className="h-3.5 w-3.5" />
-                                  Shop on Google
-                                  <ExternalLink className="h-3 w-3 opacity-60" />
-                                </a>
-                              </CardContent>
-                            </Card>
-                          );
-                        })}
-                      </div>
-                    </>
+                              <a
+                                href={`https://www.google.com/search?tbm=shop&q=${encodeURIComponent(item.shopping_search_query || item.item_name || "")}`}
+                                target="_blank" rel="noopener noreferrer"
+                                className="flex items-center justify-center gap-1.5 w-full py-2 rounded-lg bg-white text-black text-xs font-medium hover:bg-zinc-200 transition-colors"
+                              >
+                                Shop on Google <ExternalLink className="h-3 w-3 opacity-50" />
+                              </a>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
               )}
 
-              {/* AI Reasoning */}
-              <Card className="bg-zinc-900/50 border-white/5 rounded-2xl">
-                <CardContent className="p-5">
-                  <Button
-                    variant="ghost"
-                    onClick={() => setShowThinking(!showThinking)}
-                    className="w-full justify-between text-zinc-400 hover:text-white hover:bg-white/5"
-                  >
-                    <span className="flex items-center gap-2">
-                      <Brain className="h-4 w-4" />
-                      View AI Reasoning (Thought Trace)
-                    </span>
-                    <ChevronDown className={cn("h-4 w-4 transition-transform", showThinking && "rotate-180")} />
-                  </Button>
-                  {showThinking && (
-                    <div className="mt-4 p-4 rounded-xl bg-black/50 border border-white/5">
-                      <pre className="text-xs text-zinc-400 font-mono whitespace-pre-wrap leading-relaxed">
-                        {result.thought_signature}
-                      </pre>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* CTA: Try Live Mode */}
-              <Card className="bg-gradient-to-r from-violet-950/50 to-indigo-950/50 border-violet-500/20 rounded-2xl">
-                <CardContent className="p-6 flex items-center gap-6">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-bold text-white mb-1">Want to see it live?</h3>
-                    <p className="text-sm text-zinc-400">
-                      Open the Live AR Assistant to detect objects in real-time, get product suggestions with AI previews, and transform your space with style presets.
-                    </p>
+              {/* Thought Trace */}
+              <div className="rounded-xl border border-zinc-800/60 bg-zinc-900/20">
+                <button
+                  onClick={() => setShowThinking(!showThinking)}
+                  className="w-full flex items-center justify-between p-4 text-sm text-zinc-500 hover:text-zinc-300 transition-colors"
+                >
+                  <span className="flex items-center gap-2">
+                    <Brain className="h-3.5 w-3.5" /> AI Reasoning
+                  </span>
+                  <ChevronDown className={cn("h-4 w-4 transition-transform", showThinking && "rotate-180")} />
+                </button>
+                {showThinking && (
+                  <div className="px-4 pb-4">
+                    <pre className="text-xs text-zinc-500 font-mono whitespace-pre-wrap leading-relaxed p-3 rounded-lg bg-black/30 border border-zinc-800/40">
+                      {result.thought_signature}
+                    </pre>
                   </div>
-                  <Button
-                    onClick={() => setShowAssistant(true)}
-                    className="bg-violet-600 hover:bg-violet-500 text-white font-bold rounded-xl px-6 h-12 shadow-lg shadow-violet-500/20 shrink-0"
-                  >
-                    <Video className="mr-2 h-5 w-5" /> Open Live Mode
-                  </Button>
-                </CardContent>
-              </Card>
+                )}
+              </div>
+
+              {/* Live mode CTA */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-4 rounded-xl border border-zinc-800/60 bg-zinc-900/20">
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                  <Video className="h-5 w-5 text-zinc-600 shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-sm text-zinc-300">Try the Live AR Assistant</p>
+                    <p className="text-xs text-zinc-600">Detect objects, get product suggestions, transform styles in real-time</p>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => setShowAssistant(true)}
+                  className="bg-white text-black hover:bg-zinc-200 text-sm rounded-lg h-9 px-4 shrink-0 font-medium w-full sm:w-auto"
+                >
+                  Open
+                </Button>
+              </div>
             </div>
           )}
 
-          {/* Error State */}
+          {/* Error */}
           {result?.error && (
-            <div className="max-w-2xl mx-auto text-center space-y-4">
-              <AlertCircle className="h-12 w-12 text-red-400 mx-auto" />
-              <h3 className="text-xl font-bold text-white">Analysis Failed</h3>
+            <div className="max-w-md mx-auto text-center space-y-4 py-20">
+              <AlertCircle className="h-8 w-8 text-red-500/60 mx-auto" />
               <p className="text-sm text-zinc-400">{result.error}</p>
-              <Button onClick={() => { setResult(null); }} className="bg-violet-600 hover:bg-violet-500 text-white rounded-xl">
+              <Button onClick={() => setResult(null)} className="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-sm rounded-lg">
                 Try Again
               </Button>
             </div>

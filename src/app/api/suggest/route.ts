@@ -1,48 +1,52 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 
-const SUGGEST_PROMPT = `You are ZenSpace's Product Recommendation Engine, an AI interior design consultant powered by Gemini 3.
+const SUGGEST_PROMPT = `You are ZenSpace's Product Recommendation Engine, an AI interior design consultant powered by Gemini 3 with access to Google Search.
 
-Analyze the provided room image and generate SPECIFIC, ACTIONABLE product suggestions that would improve this space.
+Analyze the provided room image and suggest REAL, PURCHASABLE products from actual stores/brands that would improve this space.
 
-For each suggestion, provide:
-- A real, purchasable product type (not vague categories)
-- WHY this specific product would transform the space (reference what you actually SEE)
-- WHERE in the room it should go
-- A detailed image generation prompt for preview
-- A Google Shopping search query to find real products
+CRITICAL RULES:
+- Search Google for REAL products from actual retailers (Amazon, IKEA, Wayfair, Target, West Elm, etc.)
+- Suggest products that ACTUALLY EXIST — not imaginary ones
+- Include REAL brand names, model names if possible
+- Include REAL approximate prices based on what you find online
+- Reference what you ACTUALLY SEE in the image when explaining WHY each product fits
+- Include a direct shopping search query that will find the EXACT product on Google Shopping
 
 Return ONLY valid JSON in this exact format:
 {
-  "room_summary": "1-2 sentence summary of the room's current state and biggest opportunity",
+  "room_summary": "1-2 sentence summary of the room's current state and biggest opportunity for improvement",
   "mood": "Current mood/vibe detected (e.g., 'cluttered workspace', 'dim bedroom', 'sterile living room')",
   "color_palette": ["#hex1", "#hex2", "#hex3", "#hex4"],
   "suggestions": [
     {
       "id": 1,
-      "name": "Product Name (e.g., 'Warm LED Desk Lamp')",
+      "name": "REAL Product Name (e.g., 'IKEA TERTIAL Work Lamp' or 'Philips Hue Go Portable Light')",
+      "brand": "Brand name (e.g., 'IKEA', 'Philips', 'West Elm')",
       "category": "lighting|furniture|decor|storage|textiles|plants|tech",
-      "description": "What this product is — be specific about style, material, color",
-      "reason": "Why this is PERFECT for THIS specific room — reference what you see",
+      "description": "What this product is — real description with material, color, size",
+      "reason": "Why this is PERFECT for THIS specific room — reference what you see in the image. Be specific: mention the dim corner, the bare wall, the cluttered desk etc.",
       "placement": "Exact placement instruction (e.g., 'On the left side of the desk, angled toward the keyboard')",
-      "estimated_price": "$XX - $XX",
+      "estimated_price": "$XX - $XX (based on real market prices)",
       "impact": "high|medium|low",
-      "image_prompt": "Photorealistic product photo: [detailed description]. Clean white/transparent background, soft studio lighting, high detail, product photography style. 4K quality.",
-      "shopping_query": "exact search terms for Google Shopping",
+      "image_prompt": "Photorealistic product photo of [exact product description]. Clean white background, soft studio lighting, high detail, product photography style. 4K quality.",
+      "shopping_query": "exact search terms for Google Shopping to find this REAL product (e.g., 'IKEA TERTIAL desk lamp black')",
+      "product_url": "If you found a specific product URL from search, include it here. Otherwise leave empty string.",
       "style_tags": ["modern", "minimalist", "warm"]
     }
   ]
 }
 
 RULES:
-- Suggest 4-6 products, ordered by impact (highest first)
-- Be SPECIFIC — not "a lamp" but "a warm-toned adjustable LED desk lamp with wooden base"
-- Reference ACTUAL things you see in the image
-- Price estimates should be realistic (USD)
-- Image prompts must be detailed enough to generate realistic product photos
-- Each suggestion must solve a VISIBLE problem or enhance a VISIBLE opportunity`;
+- Suggest 4-6 REAL products, ordered by impact (highest first)
+- Every product MUST be a real product that can be purchased — not hypothetical
+- Include the brand name for every product
+- Price estimates MUST be based on real market prices (USD)
+- Reference ACTUAL things you see in the image for the "reason" field
+- Image prompts must describe the REAL product accurately
+- shopping_query should find the exact product on Google Shopping`;
 
-const MODELS = ["gemini-3-flash-preview", "gemini-3-pro-preview", "gemini-2.5-flash"];
+const MODELS = ["gemini-3-flash-preview", "gemini-2.5-flash", "gemini-2.0-flash"];
 
 export async function POST(req: NextRequest) {
     try {
@@ -67,7 +71,8 @@ export async function POST(req: NextRequest) {
 
         for (const model of MODELS) {
             try {
-                console.log(`[Suggest] Trying model: ${model}`);
+                console.log(`[Suggest] Trying model: ${model} (with Google Search grounding)`);
+
                 const response = await client.models.generateContent({
                     model,
                     contents: [{
@@ -78,21 +83,40 @@ export async function POST(req: NextRequest) {
                         ]
                     }],
                     config: {
-                        responseMimeType: "application/json",
+                        tools: [{ googleSearch: {} }],
                     }
                 });
 
                 const text = response.candidates?.[0]?.content?.parts?.[0]?.text;
                 if (!text) throw new Error("No response from model");
 
-                const parsed = JSON.parse(text);
+                // Extract grounding metadata for real product sources
+                const groundingMeta = (response.candidates?.[0] as any)?.groundingMetadata;
+                const groundingChunks = groundingMeta?.groundingChunks || [];
+                const searchQueries = groundingMeta?.webSearchQueries || [];
+
+                // Parse JSON from response (strip markdown code fences if present)
+                const jsonStr = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+                const parsed = JSON.parse(jsonStr);
 
                 // Validate structure
                 if (!parsed.suggestions || !Array.isArray(parsed.suggestions)) {
                     throw new Error("Invalid response structure — missing suggestions array");
                 }
 
-                return NextResponse.json({ ...parsed, usedModel: model });
+                // Enrich suggestions with grounding sources
+                const sources = groundingChunks.map((chunk: any) => ({
+                    url: chunk.web?.uri || "",
+                    title: chunk.web?.title || "",
+                })).filter((s: any) => s.url);
+
+                return NextResponse.json({
+                    ...parsed,
+                    sources,             // Real URLs from Google Search
+                    searchQueries,       // What was searched
+                    usedModel: model,
+                    grounded: sources.length > 0,  // Flag: results backed by real search
+                });
 
             } catch (error: any) {
                 console.warn(`[Suggest] Failed with ${model}:`, error.message);

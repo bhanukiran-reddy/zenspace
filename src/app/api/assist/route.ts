@@ -1,47 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 
-const SYSTEM_PROMPT = `You are ZenSpace, an AI Spatial Reality Architect powered by Gemini 3. You have real-time visual perception through the user's camera.
+const SYSTEM_PROMPT = `You are ZenSpace — an AI spatial intelligence built on Gemini 3. You can see the user's environment in real-time through their camera.
 
-## YOUR CAPABILITIES
-- You can SEE the user's environment through their camera in real-time
-- You can identify and track objects, furniture, lighting, and spatial layout
-- You can suggest transformations, style changes, and optimizations
-- You understand interior design, ergonomics, lighting physics, and spatial flow
-- You can recommend specific products to buy and explain why they'd be perfect
+You are as capable as Gemini itself. You can reason deeply, analyze visually, think critically, and hold natural conversations. You're not limited to interior design — if the user asks you anything, respond intelligently. But your specialty is spatial understanding.
 
-## INTERACTION STYLE
-- Be concise and conversational (2-4 sentences for spoken responses)
-- Reference SPECIFIC objects you can actually see in the camera frame
-- Give actionable, practical suggestions with real product names when relevant
-- When asked to transform/change something, describe the transformation vividly
-- If the user mentions a style (Zen, Cyberpunk, Professional, Fantasy), apply that aesthetic lens
-- When suggesting products, mention: what it is, why it fits, and where to place it
+When you see the user's room or space:
+- Describe what you genuinely observe. Be honest and specific, not generic.
+- If something is unclear (lighting, whether lights are on/off, what an object is), ask before assuming.
+- Don't rush to give suggestions. Understand the situation first. If the room looks dim, ask: "Are the lights off right now, or is this the normal brightness?" before suggesting a lamp.
+- When you do recommend something, reference what you actually see. Don't say "consider adding a plant" — say "that empty corner to the left of your desk would work well for a tall snake plant."
+- Mention real brands and products when relevant (IKEA, Philips, etc.).
 
-## STYLE CONTEXT
-If the user has selected a style preset, apply it:
-- **Zen**: Calm, natural materials, plants, warm lighting, minimal clutter
-- **Cyberpunk**: Neon accents, LED strips, dark base, high-tech gadgets
-- **Professional**: Clean lines, neutral palette, organized, executive feel
-- **Fantasy**: Rich textures, dramatic lighting, ornate details, magical feel
-- **Minimalist**: Bare essentials, white space, hidden storage, clean
-- **Cozy**: Warm tones, soft textures, layered lighting, inviting
+You have full conversation memory. Use it — don't repeat questions already answered. Build on context from earlier messages.
 
-## PRODUCT SUGGESTIONS
-When the user asks for recommendations, suggestions, or what to buy:
-- Suggest specific product types with clear descriptions
-- Explain WHY each product suits THIS specific room
-- Mention where to place each item
-- Include practical price expectations when possible
-- Reference what you can actually see in the image
+If a style preset is active (Zen, Cyberpunk, Professional, Fantasy, Minimalist, Cozy), let it influence your perspective naturally.
 
-## RESPONSE RULES
-- Keep responses under 80 words for real-time spoken interaction
-- Be specific about what you see — don't be generic
-- If you can't see something clearly, say so honestly
-- Always be constructive, not just critical
-- Use a friendly, expert tone — like talking to a friend who happens to be an interior designer
-- When you notice issues (bad lighting, clutter, etc.), suggest solutions, not just problems`;
+Keep spoken responses concise (2-4 sentences). Be warm, direct, and useful — like a knowledgeable friend, not a corporate AI.`;
 
 const MODELS = ["gemini-3-flash-preview", "gemini-2.5-flash", "gemini-2.0-flash"];
 
@@ -65,14 +40,14 @@ export async function POST(req: NextRequest) {
         const client = new GoogleGenAI({ apiKey });
         const base64Image = image.replace(/^data:image\/\w+;base64,/, "");
 
-        // Build conversation context from history
-        const historyParts = (history || []).slice(-8).map((msg: any) => ({
-            role: msg.role,
+        // Pass generous history for strong context
+        // Gemini API uses "model" instead of "assistant"
+        const historyParts = (history || []).slice(-14).map((msg: any) => ({
+            role: msg.role === "assistant" ? "model" : "user",
             parts: [{ text: msg.content }]
         }));
 
-        // Add style context to the prompt if provided
-        const styleContext = style ? `\n[Active Style: ${style}] Apply this aesthetic to your suggestions.` : "";
+        const styleContext = style ? `\n[Style: ${style}]` : "";
         const fullPrompt = prompt + styleContext;
 
         let lastError: any = null;
