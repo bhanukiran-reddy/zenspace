@@ -39,3 +39,16 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# test/debug files
+test-*.js
+debug-*.js
+list-models*.js
+*.log
+available_models.txt
+models_clean.txt
+diagnostic-output.txt
+image-model-test.txt
+imagen-test.txt
+build_error.log
+UI_ANALYSIS.md

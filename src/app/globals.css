@@ -97,17 +97,8 @@ body::before {
 }
 
 @keyframes gradient-shift {
-
-  0%,
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-
-  50% {
-    opacity: 0.8;
-    transform: scale(1.05);
-  }
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
 }
 
 /* Glass morphism */
@@ -128,8 +119,8 @@ body::before {
 
 /* Scrollbar */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -137,14 +128,18 @@ body::before {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--zen-text-muted);
-  border-radius: 5px;
+  background: rgba(113, 113, 122, 0.3);
+  border-radius: 4px;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--zen-text-secondary);
+  background: rgba(113, 113, 122, 0.5);
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
 }
 
 /* Typography */
@@ -158,74 +153,68 @@ body::before {
 }
 
 @keyframes gradient-text {
-
-  0%,
-  100% {
-    background-position: 0% 50%;
-  }
-
-  50% {
-    background-position: 100% 50%;
-  }
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 
-/* Advanced animations */
-@keyframes fade-in-up {
-  from {
-    opacity: 0;
-    transform: translateY(24px);
-  }
+/* ═══════════ Animations ═══════════ */
 
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes fade-in-scale {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 @keyframes glow-pulse {
-
-  0%,
-  100% {
-    box-shadow: 0 0 40px rgba(139, 92, 246, 0.25), 0 0 80px rgba(139, 92, 246, 0.1);
-  }
-
-  50% {
-    box-shadow: 0 0 60px rgba(139, 92, 246, 0.4), 0 0 120px rgba(139, 92, 246, 0.15);
-  }
+  0%, 100% { box-shadow: 0 0 40px rgba(139, 92, 246, 0.25), 0 0 80px rgba(139, 92, 246, 0.1); }
+  50% { box-shadow: 0 0 60px rgba(139, 92, 246, 0.4), 0 0 120px rgba(139, 92, 246, 0.15); }
 }
 
 @keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-
-  100% {
-    background-position: 200% 0;
-  }
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
 @keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
 
-  0%,
-  100% {
-    transform: translateY(0);
-  }
+@keyframes scan-line {
+  0% { top: 0%; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
 
-  50% {
-    transform: translateY(-8px);
-  }
+@keyframes hud-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes waveform {
+  0%, 100% { height: 10%; }
+  50% { height: 100%; }
+}
+
+@keyframes object-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(139, 92, 246, 0); }
+}
+
+@keyframes ar-grid {
+  0% { background-position: 0 0; }
+  100% { background-position: 20px 20px; }
+}
+
+@keyframes border-flow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 .animate-fade-in-up {
@@ -244,48 +233,6 @@ body::before {
   animation: float 6s ease-in-out infinite;
 }
 
-@keyframes scan-line {
-  0% {
-    top: 0%;
-    opacity: 0;
-  }
-
-  10% {
-    opacity: 1;
-  }
-
-  90% {
-    opacity: 1;
-  }
-
-  100% {
-    top: 100%;
-    opacity: 0;
-  }
-}
-
-@keyframes hud-spin {
-  0% {
-    transform: rotate(0deg);
-  }
-
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes waveform {
-
-  0%,
-  100% {
-    height: 10%;
-  }
-
-  50% {
-    height: 100%;
-  }
-}
-
 .animate-scan-line {
   animation: scan-line 3s linear infinite;
 }
@@ -298,8 +245,60 @@ body::before {
   animation: waveform 0.5s ease-in-out infinite;
 }
 
-/* Smooth transitions */
-* {
+.animate-object-pulse {
+  animation: object-pulse 2s ease-in-out infinite;
+}
+
+.animate-ar-grid {
+  animation: ar-grid 2s linear infinite;
+}
+
+.animate-border-flow {
+  background-size: 200% 200%;
+  animation: border-flow 3s ease infinite;
+}
+
+/* ═══════════ AR Overlay Styles ═══════════ */
+
+.ar-bbox {
+  position: absolute;
+  border: 2px solid rgba(139, 92, 246, 0.6);
+  border-radius: 4px;
+  pointer-events: auto;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ar-bbox:hover {
+  border-color: rgba(139, 92, 246, 1);
+  background: rgba(139, 92, 246, 0.1);
+}
+
+.ar-bbox.selected {
+  border-color: #a78bfa;
+  border-width: 3px;
+  background: rgba(139, 92, 246, 0.15);
+  animation: object-pulse 2s ease-in-out infinite;
+}
+
+.ar-label {
+  position: absolute;
+  top: -24px;
+  left: 0;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  font-size: 10px;
+  font-family: monospace;
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  letter-spacing: 0.05em;
+}
+
+/* ═══════════ General ═══════════ */
+
+/* Smooth transitions for interactive elements only */
+button, a, input, textarea, [role="button"] {
   transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
@@ -310,8 +309,6 @@ input:focus,
 textarea:focus {
   outline: none;
 }
-
-/* Tailwind theme extensions are handled via config or CSS variables here */
 
 @layer base {
   * {
