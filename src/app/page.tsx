@@ -3,7 +3,6 @@
 import { useState, useRef } from "react";
 import {
   Upload,
-  Sparkles,
   ShoppingBag,
   MapPin,
   Wrench,
@@ -16,7 +15,6 @@ import {
   Video,
   Lightbulb,
   Compass,
-  TrendingUp,
   Brain,
   Camera,
   ExternalLink,
@@ -28,9 +26,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import VisualAssistant from "@/components/VisualAssistant";
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 

@@ -81,6 +81,8 @@ export class ZenSpaceAgent {
                     config: {
                         systemInstruction: SYSTEM_INSTRUCTION,
                         responseMimeType: "application/json",
+                        // Google Search grounding — finds real products with real prices
+                        tools: [{ googleSearch: {} }],
                     }
                 });
 

@@ -1,50 +1,50 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 
-const SUGGEST_PROMPT = `You are ZenSpace's Product Recommendation Engine, an AI interior design consultant powered by Gemini 3 with access to Google Search.
+const SUGGEST_PROMPT = `You are ZenSpace's Product Recommendation Engine powered by Gemini 3 with real-time Google Search.
 
-Analyze the provided room image and suggest REAL, PURCHASABLE products from actual stores/brands that would improve this space.
+Look at the room image carefully. Identify what's missing, what could be improved, and what specific products would make the biggest difference. Then search Google for REAL products that are currently available for purchase.
 
-CRITICAL RULES:
-- Search Google for REAL products from actual retailers (Amazon, IKEA, Wayfair, Target, West Elm, etc.)
-- Suggest products that ACTUALLY EXIST — not imaginary ones
-- Include REAL brand names, model names if possible
-- Include REAL approximate prices based on what you find online
-- Reference what you ACTUALLY SEE in the image when explaining WHY each product fits
-- Include a direct shopping search query that will find the EXACT product on Google Shopping
+YOUR PROCESS:
+1. Analyze the image — note the lighting, furniture, empty walls, clutter, missing items
+2. Decide what categories of improvement are needed (better lighting? desk organization? decor? plants?)
+3. Search Google for SPECIFIC, REAL products in each category that fit this room
+4. Verify each product is currently for sale with a real price
 
-Return ONLY valid JSON in this exact format:
+ABSOLUTE RULES:
+- Every product MUST be a real product you found via Google Search — NEVER invent or guess products
+- The "shopping_query" field is CRITICAL — it must be the EXACT search query that finds THIS specific product on Google Shopping (include brand + model + key feature)
+- DO NOT include any URLs (product_url or image_url) — we fetch those through our own system
+- Prices must be from actual current listings
+- Reference SPECIFIC things visible in the image when explaining why each product fits
+
+Return ONLY valid JSON:
 {
-  "room_summary": "1-2 sentence summary of the room's current state and biggest opportunity for improvement",
-  "mood": "Current mood/vibe detected (e.g., 'cluttered workspace', 'dim bedroom', 'sterile living room')",
+  "room_summary": "2-3 sentences describing the room and its biggest improvement opportunities",
+  "mood": "detected mood/vibe of the space",
   "color_palette": ["#hex1", "#hex2", "#hex3", "#hex4"],
   "suggestions": [
     {
       "id": 1,
-      "name": "REAL Product Name (e.g., 'IKEA TERTIAL Work Lamp' or 'Philips Hue Go Portable Light')",
-      "brand": "Brand name (e.g., 'IKEA', 'Philips', 'West Elm')",
+      "name": "Full product name exactly as listed by the retailer",
+      "brand": "Brand name",
       "category": "lighting|furniture|decor|storage|textiles|plants|tech",
-      "description": "What this product is — real description with material, color, size",
-      "reason": "Why this is PERFECT for THIS specific room — reference what you see in the image. Be specific: mention the dim corner, the bare wall, the cluttered desk etc.",
-      "placement": "Exact placement instruction (e.g., 'On the left side of the desk, angled toward the keyboard')",
-      "estimated_price": "$XX - $XX (based on real market prices)",
+      "description": "Real product specs from the listing: material, color, dimensions",
+      "reason": "Why this product is perfect for THIS specific room — reference what you actually see in the image",
+      "placement": "Exact placement instruction for where to put this in the room",
+      "estimated_price": "Real price or price range from current listings",
       "impact": "high|medium|low",
-      "image_prompt": "Photorealistic product photo of [exact product description]. Clean white background, soft studio lighting, high detail, product photography style. 4K quality.",
-      "shopping_query": "exact search terms for Google Shopping to find this REAL product (e.g., 'IKEA TERTIAL desk lamp black')",
-      "product_url": "If you found a specific product URL from search, include it here. Otherwise leave empty string.",
-      "style_tags": ["modern", "minimalist", "warm"]
+      "shopping_query": "brand name + exact model name + key feature (this is what we search to find the product image, so be VERY specific and accurate)",
+      "style_tags": ["tag1", "tag2"]
     }
   ]
 }
 
-RULES:
-- Suggest 4-6 REAL products, ordered by impact (highest first)
-- Every product MUST be a real product that can be purchased — not hypothetical
-- Include the brand name for every product
-- Price estimates MUST be based on real market prices (USD)
-- Reference ACTUAL things you see in the image for the "reason" field
-- Image prompts must describe the REAL product accurately
-- shopping_query should find the exact product on Google Shopping`;
+QUALITY:
+- 4-6 products ordered by impact
+- Mix of price ranges
+- Each shopping_query must uniquely identify ONE specific product (not a category)
+- Be creative — suggest products the user might not have thought of`;
 
 const MODELS = ["gemini-3-flash-preview", "gemini-2.5-flash", "gemini-2.0-flash"];
 
@@ -104,7 +104,19 @@ export async function POST(req: NextRequest) {
                     throw new Error("Invalid response structure — missing suggestions array");
                 }
 
-                // Enrich suggestions with grounding sources
+                // Clean up suggestions: ALWAYS use Google Shopping search URLs, never Gemini-hallucinated URLs
+                if (parsed.suggestions) {
+                    parsed.suggestions = parsed.suggestions.map((s: any, idx: number) => ({
+                        ...s,
+                        id: s.id || idx + 1,
+                        // ALWAYS use Google Shopping search — never trust AI-generated URLs
+                        product_url: `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(s.shopping_query || s.name)}`,
+                        // Remove any hallucinated image URLs — we fetch real ones via /api/product-image
+                        product_image_url: undefined,
+                    }));
+                }
+
+                // Enrich with grounding sources
                 const sources = groundingChunks.map((chunk: any) => ({
                     url: chunk.web?.uri || "",
                     title: chunk.web?.title || "",
@@ -112,10 +124,10 @@ export async function POST(req: NextRequest) {
 
                 return NextResponse.json({
                     ...parsed,
-                    sources,             // Real URLs from Google Search
-                    searchQueries,       // What was searched
+                    sources,
+                    searchQueries,
                     usedModel: model,
-                    grounded: sources.length > 0,  // Flag: results backed by real search
+                    grounded: sources.length > 0,
                 });
 
             } catch (error: any) {

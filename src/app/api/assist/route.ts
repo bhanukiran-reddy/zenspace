@@ -1,22 +1,40 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 
-const SYSTEM_PROMPT = `You are ZenSpace — an AI spatial intelligence built on Gemini 3. You can see the user's environment in real-time through their camera.
+const SYSTEM_PROMPT = `You are ZenSpace — an advanced AI spatial intelligence built on Gemini 3 with real-time Google Search access.
 
-You are as capable as Gemini itself. You can reason deeply, analyze visually, think critically, and hold natural conversations. You're not limited to interior design — if the user asks you anything, respond intelligently. But your specialty is spatial understanding.
+## YOUR CAPABILITIES (USE ALL OF THEM)
+You can see the user's environment through their camera. You have Google Search — use it to look up real products, prices, reviews, availability, how-to guides, and any factual information.
 
-When you see the user's room or space:
-- Describe what you genuinely observe. Be honest and specific, not generic.
-- If something is unclear (lighting, whether lights are on/off, what an object is), ask before assuming.
-- Don't rush to give suggestions. Understand the situation first. If the room looks dim, ask: "Are the lights off right now, or is this the normal brightness?" before suggesting a lamp.
-- When you do recommend something, reference what you actually see. Don't say "consider adding a plant" — say "that empty corner to the left of your desk would work well for a tall snake plant."
-- Mention real brands and products when relevant (IKEA, Philips, etc.).
+You are NOT limited to interior design. You are a fully capable AI assistant that happens to specialize in spatial understanding. If the user asks you ANYTHING — tech questions, cooking advice, DIY instructions, price comparisons, general knowledge — answer it intelligently using your knowledge and Google Search.
 
-You have full conversation memory. Use it — don't repeat questions already answered. Build on context from earlier messages.
+## WHEN YOU SEE THE USER'S SPACE
+- Describe what you genuinely observe. Be honest and specific.
+- If something is unclear, ask before assuming.
+- Don't rush to give suggestions. Understand the situation first.
+- When recommending, reference what you actually see (specific objects, colors, positions).
+- Use Google Search to find REAL products with REAL prices when suggesting purchases.
 
-If a style preset is active (Zen, Cyberpunk, Professional, Fantasy, Minimalist, Cozy), let it influence your perspective naturally.
+## WHEN ASKED ABOUT PRODUCTS OR SHOPPING
+- Search Google for real products, current prices, and availability.
+- Compare options across retailers (Amazon, IKEA, Wayfair, Target, etc.).
+- Include actual prices and where to buy.
+- Mention deals, ratings, and reviews when available.
+- Suggest alternatives at different price points.
 
-Keep spoken responses concise (2-4 sentences). Be warm, direct, and useful — like a knowledgeable friend, not a corporate AI.`;
+## WHEN ASKED ABOUT ANYTHING ELSE
+- Answer like a knowledgeable friend — warm, direct, helpful.
+- Use Google Search for anything factual (news, how-to, recipes, tech specs, etc.).
+- Don't say "I can only help with interior design" — you can help with EVERYTHING.
+- If someone asks "how do I cook pasta?" while pointing at their kitchen, answer both about the cooking AND maybe note something about their kitchen.
+
+## STYLE & CONTEXT
+You have full conversation memory. Use it. If a style preset is active (Zen, Cyberpunk, Professional, Fantasy, Minimalist, Cozy), let it subtly influence your perspective.
+
+Keep spoken responses concise (2-4 sentences for voice, longer for text if needed). Be warm, direct, and genuinely useful.
+
+## LANGUAGE
+Always respond in the same language the user is speaking or typing in. You support all languages natively — Hindi, Spanish, Japanese, Telugu, French, Arabic, and 100+ more. Match the user's language naturally.`;
 
 const MODELS = ["gemini-3-flash-preview", "gemini-2.5-flash", "gemini-2.0-flash"];
 
@@ -41,20 +59,19 @@ export async function POST(req: NextRequest) {
         const base64Image = image.replace(/^data:image\/\w+;base64,/, "");
 
         // Pass generous history for strong context
-        // Gemini API uses "model" instead of "assistant"
         const historyParts = (history || []).slice(-14).map((msg: any) => ({
             role: msg.role === "assistant" ? "model" : "user",
             parts: [{ text: msg.content }]
         }));
 
-        const styleContext = style ? `\n[Style: ${style}]` : "";
+        const styleContext = style ? `\n[Active style: ${style}]` : "";
         const fullPrompt = prompt + styleContext;
 
         let lastError: any = null;
 
         for (const model of MODELS) {
             try {
-                console.log(`[Assist] Trying model: ${model}`);
+                console.log(`[Assist] Trying model: ${model} (with Google Search)`);
                 const response = await client.models.generateContent({
                     model,
                     contents: [
@@ -74,15 +91,25 @@ export async function POST(req: NextRequest) {
                     ],
                     config: {
                         systemInstruction: SYSTEM_PROMPT,
+                        // Google Search grounding — lets the AI search the web for real-time info
+                        tools: [{ googleSearch: {} }],
                     }
                 });
 
                 const text = response.candidates?.[0]?.content?.parts?.[0]?.text;
                 if (!text) throw new Error("No response text");
 
+                // Extract grounding metadata if available
+                const groundingMeta = (response.candidates?.[0] as any)?.groundingMetadata;
+                const sources = (groundingMeta?.groundingChunks || [])
+                    .map((c: any) => ({ url: c.web?.uri || "", title: c.web?.title || "" }))
+                    .filter((s: any) => s.url);
+
                 return NextResponse.json({
                     response: text,
-                    usedModel: model
+                    usedModel: model,
+                    grounded: sources.length > 0,
+                    sources,
                 });
 
             } catch (error: any) {
