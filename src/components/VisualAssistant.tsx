@@ -483,7 +483,29 @@ export default function VisualAssistant({ onClose }: { onClose: () => void }) {
     }, [isDetecting, captureFrame, autoScan, overlayImages]);
 
     /* ═══════════════ Product Suggestions ═══════════════ */
-    const fetchSuggestions = useCallback(async (context?: string) => {
+    /* ═══════════════ Detect if response mentions products ═══════════════ */
+    const detectProductMention = useCallback((text: string): boolean => {
+        const lower = text.toLowerCase();
+        // Keywords that indicate product recommendations
+        const productKeywords = [
+            "product", "buy", "purchase", "shop", "suggest", "recommend", "consider",
+            "lamp", "desk", "chair", "table", "sofa", "couch", "shelf", "cabinet",
+            "light", "lighting", "fixture", "decor", "furniture", "rug", "curtain",
+            "plant", "frame", "mirror", "storage", "organizer", "stand", "holder",
+            "amazon", "ikea", "wayfair", "target", "walmart", "home depot",
+            "price", "cost", "dollar", "usd", "available", "in stock",
+            "brand", "model", "watt", "inch", "cm", "dimension"
+        ];
+        // Check if any keyword appears
+        const hasKeyword = productKeywords.some(kw => lower.includes(kw));
+        // Also check for brand names or product-like patterns (e.g., "Philips Hue", "IKEA desk")
+        const hasBrandPattern = /\b([A-Z][a-z]+)\s+([A-Z][a-z]+|\w+)\b/.test(text);
+        // Check for price mentions
+        const hasPrice = /\$\d+|\d+\s*(dollar|usd|rupee|rs)/i.test(text);
+        return hasKeyword || (hasBrandPattern && hasPrice) || hasPrice;
+    }, []);
+
+    const fetchSuggestions = useCallback(async (context?: string, skipChatMessage = false) => {
         if (isSuggesting) return;
         const frame = captureFrame();
         if (!frame) return;
@@ -492,11 +514,14 @@ export default function VisualAssistant({ onClose }: { onClose: () => void }) {
         setStatusMessage("Finding products...");
         setSidePanelTab("suggestions");
 
-        setChatHistory(prev => [...prev, {
-            role: "user",
-            content: context || "What products would you suggest for this space?",
-            timestamp: Date.now(),
-        }]);
+        // Only add chat message if not auto-triggered (to avoid duplicates)
+        if (!skipChatMessage) {
+            setChatHistory(prev => [...prev, {
+                role: "user",
+                content: context || "What products would you suggest for this space?",
+                timestamp: Date.now(),
+            }]);
+        }
 
         try {
             const res = await fetch("/api/suggest", {
@@ -516,19 +541,24 @@ export default function VisualAssistant({ onClose }: { onClose: () => void }) {
             setGroundingSources(data.sources || []);
             setIsGrounded(data.grounded || false);
 
-            const sugText = data.suggestions.map((s, i) => {
-                const brand = s.brand ? ` by ${s.brand}` : "";
-                return `${i + 1}. **${s.name}**${brand} — ${s.estimated_price}\n   ${s.reason}`;
-            }).join("\n\n");
+            // Only add chat message if not auto-triggered (to avoid duplicate with AI response)
+            if (!skipChatMessage) {
+                const sugText = data.suggestions.map((s, i) => {
+                    const brand = s.brand ? ` by ${s.brand}` : "";
+                    return `${i + 1}. **${s.name}**${brand} — ${s.estimated_price}\n   ${s.reason}`;
+                }).join("\n\n");
 
-            setChatHistory(prev => [...prev, {
-                role: "assistant",
-                content: `Here are ${data.suggestions.length} product suggestions:\n\n${sugText}\n\nCheck the Suggestions panel for details and shopping links.`,
-                timestamp: Date.now(),
-                suggestions: data.suggestions,
-            }]);
-            setStatusMessage(`${data.suggestions.length} products found`);
-            speak(`I found ${data.suggestions.length} product suggestions for your space.`);
+                setChatHistory(prev => [...prev, {
+                    role: "assistant",
+                    content: `Here are ${data.suggestions.length} product suggestions:\n\n${sugText}\n\nCheck the Suggestions panel for details and shopping links.`,
+                    timestamp: Date.now(),
+                    suggestions: data.suggestions,
+                }]);
+                speak(`I found ${data.suggestions.length} product suggestions for your space.`);
+            } else {
+                // When auto-triggered, just update the status and switch to suggestions tab
+                setStatusMessage(`Found ${data.suggestions.length} products — check Suggestions tab`);
+            }
 
         } catch (err: any) {
             console.error("Suggest error:", err);
@@ -674,6 +704,19 @@ export default function VisualAssistant({ onClose }: { onClose: () => void }) {
             }
 
             setChatHistory(prev => [...prev, { role: "assistant", content: responseContent, timestamp: Date.now() }]);
+            
+            // 🎯 AUTO-DETECT PRODUCTS: If Gemini mentions products, auto-populate Suggestions tab
+            const originalQuery = query.trim();
+            const mentionsProducts = detectProductMention(data.response) || detectProductMention(originalQuery);
+            
+            if (mentionsProducts && !isExplicitShopping) {
+                // Auto-fetch structured product suggestions based on the user's query
+                // This ensures ANY product mention gets shown in the Suggestions tab with previews
+                setTimeout(() => {
+                    fetchSuggestions(originalQuery, true); // skipChatMessage=true to avoid duplicate
+                }, 500); // Small delay to let chat message render first
+            }
+            
             setStatusMessage("Ready");
             speak(data.response); // Speak the clean response without source links
         } catch (err: any) {
@@ -682,7 +725,7 @@ export default function VisualAssistant({ onClose }: { onClose: () => void }) {
         } finally {
             setIsProcessing(false);
         }
-    }, [isProcessing, captureFrame, chatHistory, selectedStyle, speak, fetchSuggestions, detectedObjects, selectedObject, roomMood, colorPalette]);
+    }, [isProcessing, captureFrame, chatHistory, selectedStyle, speak, fetchSuggestions, detectedObjects, selectedObject, roomMood, colorPalette, detectProductMention]);
 
     /* ═══════════════ INSTANT Canvas Transform (zero latency, no API) ═══════════════ */
     const applyInstantTransform = useCallback((obj: DetectedObject, style: string): string | null => {
