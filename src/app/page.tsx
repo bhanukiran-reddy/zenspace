@@ -253,6 +253,25 @@ export default function Home() {
                 </p>
               </div>
 
+              {/* Live mode CTA */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-4 rounded-xl border border-zinc-800/60 bg-zinc-900/20 mb-6">
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                  <div className="h-10 w-10 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
+                    <Video className="h-4 w-4 text-zinc-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-zinc-300">Live AR Assistant</p>
+                    <p className="text-xs text-zinc-600">Camera, voice, object detection, product suggestions, style transforms</p>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => setShowAssistant(true)}
+                  className="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-sm rounded-lg h-9 px-4 shrink-0 w-full sm:w-auto ml-auto"
+                >
+                  Open <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
+                </Button>
+              </div>
+
               {/* Upload */}
               <div className="space-y-4">
                 <div
@@ -333,24 +352,7 @@ export default function Home() {
                 ))}
               </div>
 
-              {/* Live mode CTA */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-4 rounded-xl border border-zinc-800/60 bg-zinc-900/20">
-                <div className="flex items-center gap-3 w-full sm:w-auto">
-                  <div className="h-10 w-10 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
-                    <Video className="h-4 w-4 text-zinc-400" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-zinc-300">Live AR Assistant</p>
-                    <p className="text-xs text-zinc-600">Camera, voice, object detection, product suggestions, style transforms</p>
-                  </div>
-                </div>
-                <Button
-                  onClick={() => setShowAssistant(true)}
-                  className="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-sm rounded-lg h-9 px-4 shrink-0 w-full sm:w-auto"
-                >
-                  Open <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
-                </Button>
-              </div>
+
             </div>
           )}
 
@@ -506,8 +508,8 @@ export default function Home() {
                               {action.estimated_impact && (
                                 <span className={cn("text-[10px] px-1.5 py-0.5 rounded border",
                                   action.estimated_impact === "high" ? "text-green-400 border-green-500/20 bg-green-500/5" :
-                                  action.estimated_impact === "medium" ? "text-amber-400 border-amber-500/20 bg-amber-500/5" :
-                                  "text-zinc-500 border-zinc-700/40 bg-zinc-800/30"
+                                    action.estimated_impact === "medium" ? "text-amber-400 border-amber-500/20 bg-amber-500/5" :
+                                      "text-zinc-500 border-zinc-700/40 bg-zinc-800/30"
                                 )}>
                                   {action.estimated_impact}
                                 </span>
@@ -545,8 +547,8 @@ export default function Home() {
                           {action.priority && (
                             <span className={cn("inline-block mt-2 text-[10px] px-1.5 py-0.5 rounded border",
                               action.priority === "urgent" ? "text-red-400 border-red-500/20 bg-red-500/5" :
-                              action.priority === "recommended" ? "text-amber-400 border-amber-500/20 bg-amber-500/5" :
-                              "text-zinc-500 border-zinc-700/40 bg-zinc-800/30"
+                                action.priority === "recommended" ? "text-amber-400 border-amber-500/20 bg-amber-500/5" :
+                                  "text-zinc-500 border-zinc-700/40 bg-zinc-800/30"
                             )}>
                               {action.priority}
                             </span>
@@ -627,8 +629,8 @@ export default function Home() {
                                 {item.estimated_impact && (
                                   <span className={cn("text-[10px] px-1.5 py-0.5 rounded border shrink-0",
                                     item.estimated_impact === "high" ? "text-green-400 border-green-500/20 bg-green-500/5" :
-                                    item.estimated_impact === "medium" ? "text-amber-400 border-amber-500/20 bg-amber-500/5" :
-                                    "text-zinc-500 border-zinc-700/40"
+                                      item.estimated_impact === "medium" ? "text-amber-400 border-amber-500/20 bg-amber-500/5" :
+                                        "text-zinc-500 border-zinc-700/40"
                                   )}>
                                     {item.estimated_impact}
                                   </span>
